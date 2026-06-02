@@ -70,7 +70,7 @@
         .user-avatar{width:40px;height:40px;border-radius:50%;background:var(--accent);display:flex;justify-content:center;align-items:center;font-weight:900;font-size:18px;color:#fff}
         .user-name{font-weight:800;font-size:16px;text-align:left;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
         
-        #full-lb{background:var(--card);border:1px solid var(--card-border);border-radius:8px;padding:8px;margin-bottom:15px;max-height:350px;overflow-y:auto}
+        #full-lb{background:var(--card);border:1px solid var(--card-border);border-radius:8px;padding:8px;margin-bottom:15px;max-height:300px;overflow-y:auto}
         .lb-head{font-size:11px;color:var(--text-muted);text-align:center;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px}
         .lb-entry{display:flex;align-items:center;padding:4px 6px;border-radius:4px;font-size:12px;font-weight:700;margin-bottom:2px}
         .lb-entry.me{background:rgba(249,115,22,0.15);border:1px solid rgba(249,115,22,0.3)}
@@ -116,7 +116,7 @@
                     <li>Data akun dan skor bersifat privat sehingga tidak memudahkan player lain untuk melihat skor anda secara diam-diam .</li>
                     <li>Admin berhak mereset skor atau memblokir akun yang terbukti melanggar ketentuan ini.</li>
                 </ul><br>
-                <p style="text-align:center; font-size:11px; color:var(--text-muted); margin-top:15px;">Dengan menekan "Masuk dengan Google", Anda dianggap menyetujui seluruh ketentuan di atas, dan selamat bermain</p>
+                <p style="text-align:center; font-size:11px; color:var(--text-muted); margin-top:15px;">With menekan "Masuk dengan Google", Anda dianggap menyetujui seluruh ketentuan di atas, dan selamat bermain</p>
             </div>
             <button id="btn-close-tos" class="btn btn-primary" style="margin-top:15px">MENGERTI</button>
         </div>
@@ -143,7 +143,9 @@
         <div class="rank-content">
             <h2><i class="fas fa-trophy"></i> PERINGKAT GLOBAL</h2>
             <div id="full-lb">Memuat data...</div>
-            <button class="btn btn-secondary" id="btn-back-dash"><i class="fas fa-arrow-left"></i> KEMBALI</button>
+            <button class="btn btn-primary" id="btn-back-game"><i class="fas fa-gamepad"></i> KEMBALI KE GAME</button>
+            <button class="btn btn-google" id="btn-change-google-account" style="font-size:13px"><img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="G"> GANTI AKUN GOOGLE</button>
+            <button class="btn btn-secondary" id="btn-back-dash" style="margin-top:10px; font-size:13px"><i class="fas fa-arrow-left"></i> KEMBALI KE DASHBOARD</button>
         </div>
     </div>
 </div>
@@ -193,6 +195,7 @@ auth.onAuthStateChanged(user => {
 
  $btnGoogle.addEventListener('click', () => {
     const provider = new firebase.auth.GoogleAuthProvider();
+    provider.setCustomParameters({ prompt: 'select_account' });
     $btnGoogle.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memuat...';
     $btnGoogle.disabled = true;
     auth.signInWithPopup(provider).catch(e => {
@@ -279,6 +282,33 @@ function renderOnlineLeaderboard() {
 
 document.getElementById('btn-leaderboard').addEventListener('click', () => { renderOnlineLeaderboard(); showScreen('rank-screen'); });
 document.getElementById('btn-back-dash').addEventListener('click', () => showScreen('dash-screen'));
+document.getElementById('btn-back-game').addEventListener('click', () => {
+    if(currentUser) startReady();
+});
+
+document.getElementById('btn-change-google-account').addEventListener('click', () => {
+    const $btnChange = document.getElementById('btn-change-google-account');
+    $btnChange.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Proses Ganti Akun...';
+    $btnChange.disabled = true;
+
+    auth.signOut().then(() => {
+        const provider = new firebase.auth.GoogleAuthProvider();
+        provider.setCustomParameters({ prompt: 'select_account' });
+        
+        auth.signInWithPopup(provider).then((result) => {
+            $btnChange.innerHTML = '<img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="G"> GANTI AKUN GOOGLE';
+            $btnChange.disabled = false;
+            // Refresh halaman web penuh agar data di sinkron dari nol ke akun baru
+            window.location.reload();
+        }).catch(e => {
+            alert("Gagal login akun baru: " + e.message);
+            window.location.reload();
+        });
+    }).catch(e => {
+        alert("Gagal memutus akun lama: " + e.message);
+        window.location.reload();
+    });
+});
 
 const CFG = {
     W: 380, H: 640, gravity: 0.42, jumpForce: -7.2, pipeBaseSpeed: 2.4,
